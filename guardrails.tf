@@ -148,3 +148,35 @@ resource "aws_organizations_policy_attachment" "protect_security_baseline_root" 
   policy_id = aws_organizations_policy.protect_security_baseline.id
   target_id = local.root_id
 }
+
+# --- S3 Block Public Access for the whole organization ----------------------
+
+# An S3 policy, not a service control policy: instead of denying API calls it
+# switches on all four S3 Block Public Access settings in every account it
+# applies to, and overrides the account-level setting. No bucket in those
+# accounts can be made public, and the accounts cannot turn this off.
+#
+# The policy type only supports "all" or "none"; the four settings cannot be
+# set one by one. Detaching the policy returns each account to the
+# account-level setting it had before.
+resource "aws_organizations_policy" "s3_block_public_access" {
+  name        = "S3BlockPublicAccess"
+  description = "Turns on all S3 Block Public Access settings in every account"
+  type        = "S3_POLICY"
+
+  content = jsonencode({
+    s3_attributes = {
+      public_access_block_configuration = {
+        "@@assign" = "all"
+      }
+    }
+  })
+
+  # The S3_POLICY type must be enabled on the organization first.
+  depends_on = [aws_organizations_organization.this]
+}
+
+resource "aws_organizations_policy_attachment" "s3_block_public_access_root" {
+  policy_id = aws_organizations_policy.s3_block_public_access.id
+  target_id = local.root_id
+}

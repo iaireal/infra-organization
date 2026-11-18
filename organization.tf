@@ -8,7 +8,10 @@ import {
 resource "aws_organizations_organization" "this" {
   feature_set = "ALL"
 
-  enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
+  enabled_policy_types = [
+    "SERVICE_CONTROL_POLICY",
+    "S3_POLICY", # organization-wide S3 Block Public Access, see guardrails.tf
+  ]
 
   # Services allowed to act across the organization. Removing an entry turns
   # that service's organization integration off.

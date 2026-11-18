@@ -9,7 +9,7 @@ an account that this one creates.
 
 - **Runs against:** the organization's management account
 - **Region:** `us-east-1`
-- **Status:** written and validated, not yet applied
+- **Status:** applied
 - **Private values:** none in this repository, see [Private values](#private-values)
 
 ## Contents
@@ -61,6 +61,9 @@ Organization
 
 Guardrails attached at the root, applying to every member account:
   DenyLeaveAndCloseAccount · RestrictRegions · ProtectSecurityBaseline
+
+Applying to every account, the management account included:
+  S3BlockPublicAccess
 ```
 
 The list of member accounts is not in the code. It comes from the private inputs file, so
@@ -169,6 +172,12 @@ Three service control policies, all attached at the organization root:
 
 None of these apply to the management account. AWS never applies service control policies
 there.
+
+One more guardrail is a different kind of policy, an **S3 policy**:
+
+| Policy | Effect |
+| ------ | ------ |
+| `S3BlockPublicAccess` | Switches on all four S3 Block Public Access settings in every account, the management account included, and overrides the account-level setting. No bucket can be made public. |
 
 ### `identity_center.tf`
 
