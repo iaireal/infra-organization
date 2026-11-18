@@ -1,0 +1,28 @@
+# Example inputs. The real file holds private values, so it is NOT kept in this
+# repository. Copy this file to a private location (by default
+# ../private/infra-organization.tfvars) and fill it in.
+
+# The management account. Terraform refuses to run against any other account.
+management_account_id = "111122223333"
+
+# Resources created in the console before Terraform, adopted on the first apply.
+existing = {
+  organization_id      = "o-exampleorgid"
+  root_id              = "r-exam"
+  deny_leave_policy_id = "p-examplepolicy"
+}
+
+# Every AWS account needs an email address that no other AWS account uses.
+# Many mail providers support plus-addressing, which gives one inbox many
+# addresses: you+iaireal-prod@your-domain is delivered to you@your-domain.
+accounts = {
+  "iaireal-log-archive" = { email = "you+iaireal-log-archive@example.com", ou = "security" }
+  "iaireal-security"    = { email = "you+iaireal-security@example.com", ou = "security" }
+  "iaireal-prod"        = { email = "you+iaireal-prod@example.com", ou = "workloads" }
+  "iaireal-dev"         = { email = "you+iaireal-dev@example.com", ou = "workloads" }
+}
+
+sso_user_name             = "your-identity-center-user-name"
+admin_permission_set_name = "AdministratorAccess"
+budget_alert_email        = "you@example.com"
+monthly_budget_usd        = 10

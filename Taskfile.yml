@@ -1,0 +1,75 @@
+# Tasks for infra-organization. Run `task` to list them.
+version: '3'
+
+env:
+  AWS_PROFILE: management
+  AWS_REGION: us-east-1
+  AWS_PAGER: ''
+
+vars:
+  # Private inputs are kept outside this repository. Override the location
+  # with: task plan VAR_FILE=/path/to/file.tfvars
+  VAR_FILE: '{{.VAR_FILE | default (print .ROOT_DIR "/../private/infra-organization.tfvars")}}'
+  # The bucket name contains the account ID, so it is looked up, not written.
+  # Must match local.state_bucket_name in locals.tf.
+  STATE_BUCKET:
+    sh: echo "iaireal-terraform-state-$(aws sts get-caller-identity --query Account --output text)"
+
+tasks:
+  default:
+    desc: List the available tasks
+    silent: true
+    cmds:
+      - task --list
+
+  bootstrap:
+    desc: Create the empty Terraform state bucket (first time only)
+    summary: |
+      Terraform cannot create the bucket that stores its own state, so this
+      creates an empty private bucket with the AWS CLI. The first
+      `task apply` then imports it and applies encryption and the bucket policy.
+    status:
+      - aws s3api head-bucket --bucket {{.STATE_BUCKET}}
+    cmds:
+      - aws s3api create-bucket --bucket {{.STATE_BUCKET}} --region us-east-1
+      - >-
+        aws s3api put-public-access-block --bucket {{.STATE_BUCKET}}
+        --public-access-block-configuration
+        BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+      - aws s3api put-bucket-versioning --bucket {{.STATE_BUCKET}} --versioning-configuration Status=Enabled
+
+  init:
+    desc: Initialize Terraform with the S3 backend
+    deps: [bootstrap]
+    cmds:
+      - terraform init -backend-config="bucket={{.STATE_BUCKET}}"
+
+  fmt:
+    desc: Format the Terraform files
+    cmds:
+      - terraform fmt -recursive
+
+  validate:
+    desc: Check formatting and validate the configuration
+    cmds:
+      - terraform fmt -check -recursive
+      - terraform validate
+
+  plan:
+    desc: Show what would change and save the plan to tfplan
+    preconditions:
+      - sh: test -f "{{.VAR_FILE}}"
+        msg: |
+          Private inputs file not found: {{.VAR_FILE}}
+          Copy terraform.tfvars.example there and fill it in.
+    cmds:
+      - terraform plan -var-file="{{.VAR_FILE}}" -out=tfplan
+
+  apply:
+    desc: Apply the plan saved by `task plan`
+    preconditions:
+      - sh: test -f tfplan
+        msg: No saved plan. Run `task plan` first and review it.
+    cmds:
+      - terraform apply tfplan
+      - rm -f tfplan

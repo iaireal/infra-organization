@@ -1,0 +1,22 @@
+# Terraform working files
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+crash.*.log
+
+# Input files hold private values and never belong in this public repository.
+# Only the example, which has placeholders, is committed.
+*.tfvars
+*.tfvars.json
+!terraform.tfvars.example
+
+# Local overrides
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# .terraform.lock.hcl is committed on purpose: it pins provider versions.
