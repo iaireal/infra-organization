@@ -1,6 +1,6 @@
 # Example inputs. The real file holds private values, so it is NOT kept in this
-# repository. Copy this file to a private location (by default
-# ../private/infra-organization.tfvars) and fill it in.
+# repository. Copy this file to a private location, fill it in, and pass its
+# path: task plan VAR_FILE=/path/to/file.tfvars
 
 # The management account. Terraform refuses to run against any other account.
 management_account_id = "111122223333"

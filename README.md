@@ -89,9 +89,8 @@ addresses or credentials. Everything private is supplied when Terraform runs:
 | State bucket name (it contains the account ID) | Computed by `Taskfile.yml` from the signed-in account and passed to `terraform init` |
 | AWS credentials | The `management` AWS CLI profile, through `aws sso login` |
 
-The Taskfile looks for the inputs file at `../private/infra-organization.tfvars`, which is
-where it sits when this repository is cloned inside the project's private working
-directory. Use another location with `task plan VAR_FILE=/path/to/file.tfvars`.
+There is no default location for the inputs file. Its path must be given every time:
+`task plan VAR_FILE=/path/to/file.tfvars`.
 `terraform.tfvars.example` shows the format with placeholder values, and `.gitignore`
 blocks every other `*.tfvars` file.
 
@@ -205,7 +204,7 @@ It computes the state bucket name and passes the private inputs file to Terrafor
 | `task init` | Runs `bootstrap`, then `terraform init` with the bucket name |
 | `task fmt` | Formats the files |
 | `task validate` | Checks formatting and validates the configuration |
-| `task plan` | Shows what would change and saves it to `tfplan` |
+| `task plan VAR_FILE=<path>` | Shows what would change and saves it to `tfplan` |
 | `task apply` | Applies the saved `tfplan`, then deletes it |
 
 ## State and locking
@@ -241,14 +240,14 @@ Requires Terraform 1.10 or later, the AWS CLI and [Task](https://taskfile.dev).
 1. Sign in: `aws sso login --profile management`
 2. Create the private inputs file outside this repository and fill in the real values:
    ```bash
-   mkdir -p ../private
-   cp terraform.tfvars.example ../private/infra-organization.tfvars
+   cp terraform.tfvars.example /path/to/private/infra-organization.tfvars
    ```
    Every account needs an email address that no AWS account has ever used. Many mail
    providers support plus-addressing, which gives one inbox many addresses:
    `you+iaireal-prod@your-domain` is delivered to `you@your-domain`.
 3. Create the state bucket and initialize: `task init`
-4. Review the plan: `task plan`. Expect 4 imports (the state bucket, the organization, the
+4. Review the plan: `task plan VAR_FILE=/path/to/private/infra-organization.tfvars`.
+   Expect 4 imports (the state bucket, the organization, the
    existing policy and its attachment) and no destroys.
 5. Apply it: `task apply`
 6. Sign in again so the new accounts and roles appear:
@@ -260,8 +259,8 @@ account's address.
 ## Everyday use
 
 ```bash
-task plan     # always review before applying
-task apply    # applies exactly what was reviewed
+task plan VAR_FILE=/path/to/file.tfvars   # always review before applying
+task apply                                # applies exactly what was reviewed
 ```
 
 `task apply` refuses to run without a saved plan, so nothing is ever applied unseen.
